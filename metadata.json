@@ -1,0 +1,6 @@
+{
+  "name": "CareerPulse - AI Career Advisor & ATS Resume Parser",
+  "description": "Analyze candidate resumes, calculate ATS role match scores, identify skill gaps, optimize bullets with the STAR method, and get tailored job search strategy.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
