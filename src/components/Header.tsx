@@ -42,12 +42,12 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Center Tool Switcher */}
-        <nav className="flex items-center p-1 bg-slate-900 rounded-xl border border-slate-800 text-xs overflow-x-auto max-w-full">
+        {/* Center Tool Switcher (Floating Pill Navigation) */}
+        <nav className="flex items-center p-1 bg-slate-900/90 backdrop-blur-md rounded-full border border-slate-800 text-xs overflow-x-auto max-w-full shadow-lg shadow-black/20">
           <button
             type="button"
             onClick={() => onSelectTool('live_job_finder')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all shrink-0 ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold transition-all shrink-0 ${
               activeTool === 'live_job_finder'
                 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
                 : 'text-slate-400 hover:text-slate-200'
@@ -61,7 +61,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             type="button"
             onClick={() => onSelectTool('career_copywriter')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all shrink-0 ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold transition-all shrink-0 ${
               activeTool === 'career_copywriter'
                 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
                 : 'text-slate-400 hover:text-slate-200'
@@ -75,7 +75,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             type="button"
             onClick={() => onSelectTool('ats_posting_scorer')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all shrink-0 ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold transition-all shrink-0 ${
               activeTool === 'ats_posting_scorer'
                 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
                 : 'text-slate-400 hover:text-slate-200'
@@ -89,7 +89,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             type="button"
             onClick={() => onSelectTool('career_matcher')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all shrink-0 ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold transition-all shrink-0 ${
               activeTool === 'career_matcher'
                 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
                 : 'text-slate-400 hover:text-slate-200'
@@ -103,7 +103,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             type="button"
             onClick={() => onSelectTool('ats_parser')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all shrink-0 ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold transition-all shrink-0 ${
               activeTool === 'ats_parser'
                 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
                 : 'text-slate-400 hover:text-slate-200'
@@ -117,7 +117,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             type="button"
             onClick={() => onSelectTool('cover_letter')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold transition-all shrink-0 ${
               activeTool === 'cover_letter'
                 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
                 : 'text-slate-400 hover:text-slate-200'
@@ -131,7 +131,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             type="button"
             onClick={() => onSelectTool('interview_coach')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold transition-all shrink-0 ${
               activeTool === 'interview_coach'
                 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
                 : 'text-slate-400 hover:text-slate-200'
@@ -145,7 +145,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             type="button"
             onClick={() => onSelectTool('career_advisor')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold transition-all shrink-0 ${
               activeTool === 'career_advisor'
                 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
                 : 'text-slate-400 hover:text-slate-200'
@@ -157,12 +157,12 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         </nav>
 
-        {/* Right Actions */}
+        {/* Right Actions (Floating Utilities) */}
         <div className="flex items-center gap-2">
           {hasResult && (
             <button
               onClick={onReset}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-lg transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-900/90 hover:bg-slate-800 border border-slate-800 rounded-full transition-colors"
               title="Reset current view"
             >
               <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
@@ -172,7 +172,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           <button
             onClick={onOpenHistory}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-lg transition-colors relative"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-900/90 hover:bg-slate-800 border border-slate-800 rounded-full transition-colors relative"
           >
             <History className="w-3.5 h-3.5 text-indigo-400" />
             <span className="hidden sm:inline">History</span>

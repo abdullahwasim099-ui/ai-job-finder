@@ -83,7 +83,7 @@ export const EditorialHero: React.FC<EditorialHeroProps> = ({
               <div className="absolute -inset-4 bg-gradient-to-tr from-indigo-500/20 to-cyan-500/10 rounded-3xl blur-2xl -z-10 opacity-70" />
 
               {/* Primary Hero Image */}
-              <div className="relative rounded-2xl overflow-hidden border border-slate-800/90 shadow-2xl bg-slate-950">
+              <div className="relative rounded-tl-3xl rounded-br-3xl rounded-tr-none rounded-bl-none overflow-hidden border border-slate-800/90 shadow-2xl bg-slate-950">
                 <img
                   src={heroImage}
                   alt="Executive Career Intelligence Telemetry"
@@ -93,11 +93,11 @@ export const EditorialHero: React.FC<EditorialHeroProps> = ({
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent pointer-events-none" />
               </div>
 
-              {/* Secondary Floating Media Card: Overlaps bottom-left corner by -40px vertically and -60px horizontally */}
-              <div className="absolute z-20 p-4 sm:p-5 rounded-2xl bg-slate-950/95 backdrop-blur-xl border border-indigo-500/30 shadow-2xl shadow-indigo-950/70 max-w-[280px] sm:max-w-[320px] text-left transition-transform duration-300 hover:scale-[1.02] -bottom-[40px] -left-[20px] sm:-left-[60px]">
+              {/* Secondary Floating Media Card: Asymmetric corners with internal shift on hover */}
+              <div className="absolute z-20 p-4 sm:p-5 rounded-tl-2xl rounded-br-2xl rounded-tr-none rounded-bl-none bg-slate-950/95 backdrop-blur-xl border border-indigo-500/30 hover:border-indigo-400 transition-colors duration-200 shadow-2xl shadow-indigo-950/70 max-w-[280px] sm:max-w-[320px] text-left group -bottom-[40px] -left-[20px] sm:-left-[60px]">
                 {/* Header badge */}
                 <div className="flex items-center justify-between gap-3 mb-2.5">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 group-hover:translate-x-1 transition-transform duration-200">
                     <span className="relative flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
@@ -110,10 +110,10 @@ export const EditorialHero: React.FC<EditorialHeroProps> = ({
                 </div>
 
                 {/* Metric title */}
-                <div className="text-sm font-extrabold text-white leading-tight mb-1 text-left">
+                <div className="text-sm font-extrabold text-white leading-tight mb-1 text-left group-hover:translate-x-1 transition-transform duration-200">
                   Executive ATS Pass Ratio
                 </div>
-                <p className="text-[11px] text-slate-400 leading-snug text-left mb-3">
+                <p className="text-[11px] text-slate-400 leading-snug text-left mb-3 group-hover:translate-x-1 transition-transform duration-200">
                   Zero hallucination threshold · Active portal indexing across LinkedIn & Indeed.
                 </p>
 
@@ -131,24 +131,22 @@ export const EditorialHero: React.FC<EditorialHeroProps> = ({
           Negative bottom margin: mb-[-96px] (-6rem) with relative z-20, forcing it to bleed down into Section B */}
       <div className="relative z-20 mb-[-96px] mt-12 w-full">
         {/* Feature Grid with Card Stacking in an Offset Cascade:
-            Card 1 at translate-y-0
-            Card 2 at translate-y-8
-            Card 3 at translate-y-16
-            Ultra-fine 1px semi-transparent border (border border-white/10), backdrop-blur-md, without heavy drop shadows */}
+            Asymmetric Corner Radii: rounded-tl-2xl rounded-br-2xl rounded-tr-none rounded-bl-none
+            No scale transforms on hover: sharp border color transition + internal shift */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-start">
           {/* Card 1: translate-y-0 */}
-          <div className="relative transform translate-y-0 p-6 rounded-2xl bg-slate-900/50 backdrop-blur-md border border-white/10 text-left transition-transform hover:-translate-y-1 duration-300">
+          <div className="relative transform translate-y-0 p-6 rounded-tl-2xl rounded-br-2xl rounded-tr-none rounded-bl-none bg-slate-900/50 backdrop-blur-md border border-white/10 hover:border-indigo-400/80 transition-colors duration-200 group text-left">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-indigo-400">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-indigo-400 group-hover:translate-x-1 transition-transform duration-200">
                 01 / ATS PARSER & GAP ENGINE
               </span>
-              <Cpu className="w-4 h-4 text-indigo-400" />
+              <Cpu className="w-4 h-4 text-indigo-400 group-hover:translate-x-1 transition-transform duration-200" />
             </div>
 
-            <div className="text-2xl font-black text-white tracking-tight mb-1">
+            <div className="text-2xl font-black text-white tracking-tight mb-1 group-hover:translate-x-1 transition-transform duration-200">
               94.8% Match Matrix
             </div>
-            <p className="text-xs text-slate-400 leading-relaxed mb-4">
+            <p className="text-xs text-slate-400 leading-relaxed mb-4 group-hover:translate-x-1 transition-transform duration-200">
               Bi-directional keyword vectoring against Workday, Greenhouse & Lever scoring algorithms.
             </p>
 
@@ -159,18 +157,18 @@ export const EditorialHero: React.FC<EditorialHeroProps> = ({
           </div>
 
           {/* Card 2: translate-y-8 */}
-          <div className="relative transform translate-y-0 md:translate-y-8 p-6 rounded-2xl bg-slate-900/50 backdrop-blur-md border border-white/10 text-left transition-transform hover:translate-y-7 duration-300">
+          <div className="relative transform translate-y-0 md:translate-y-8 p-6 rounded-tl-2xl rounded-br-2xl rounded-tr-none rounded-bl-none bg-slate-900/50 backdrop-blur-md border border-white/10 hover:border-cyan-400/80 transition-colors duration-200 group text-left">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-cyan-400">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-cyan-400 group-hover:translate-x-1 transition-transform duration-200">
                 02 / LIVE SEARCH GROUNDING
               </span>
-              <Globe2 className="w-4 h-4 text-cyan-400" />
+              <Globe2 className="w-4 h-4 text-cyan-400 group-hover:translate-x-1 transition-transform duration-200" />
             </div>
 
-            <div className="text-2xl font-black text-white tracking-tight mb-1">
+            <div className="text-2xl font-black text-white tracking-tight mb-1 group-hover:translate-x-1 transition-transform duration-200">
               Google Grounded Portals
             </div>
-            <p className="text-xs text-slate-400 leading-relaxed mb-4">
+            <p className="text-xs text-slate-400 leading-relaxed mb-4 group-hover:translate-x-1 transition-transform duration-200">
               Discovers 4 to 6 verified, active listings on LinkedIn, Indeed, and direct company careers.
             </p>
 
@@ -181,18 +179,18 @@ export const EditorialHero: React.FC<EditorialHeroProps> = ({
           </div>
 
           {/* Card 3: translate-y-16 */}
-          <div className="relative transform translate-y-0 md:translate-y-16 p-6 rounded-2xl bg-slate-900/50 backdrop-blur-md border border-white/10 text-left transition-transform hover:translate-y-15 duration-300">
+          <div className="relative transform translate-y-0 md:translate-y-16 p-6 rounded-tl-2xl rounded-br-2xl rounded-tr-none rounded-bl-none bg-slate-900/50 backdrop-blur-md border border-white/10 hover:border-violet-400/80 transition-colors duration-200 group text-left">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-violet-400">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-violet-400 group-hover:translate-x-1 transition-transform duration-200">
                 03 / STAR COPY SYNTHESIZER
               </span>
-              <FileCheck2 className="w-4 h-4 text-violet-400" />
+              <FileCheck2 className="w-4 h-4 text-violet-400 group-hover:translate-x-1 transition-transform duration-200" />
             </div>
 
-            <div className="text-2xl font-black text-white tracking-tight mb-1">
+            <div className="text-2xl font-black text-white tracking-tight mb-1 group-hover:translate-x-1 transition-transform duration-200">
               &lt; 250 Words Strict
             </div>
-            <p className="text-xs text-slate-400 leading-relaxed mb-4">
+            <p className="text-xs text-slate-400 leading-relaxed mb-4 group-hover:translate-x-1 transition-transform duration-200">
               Converts complex career achievements into quantifiable STAR bullets & portal responses.
             </p>
 
