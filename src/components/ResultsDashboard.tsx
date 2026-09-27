@@ -11,6 +11,7 @@ import {
   RotateCcw,
   Layers,
   ArrowRight,
+  Download,
 } from 'lucide-react';
 import { CareerAnalysisResult, AnalysisInput } from '../types/career';
 import { ScoreGauge } from './ScoreGauge';
@@ -50,24 +51,55 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
     setTimeout(() => setCopiedAllBullets(false), 2000);
   };
 
+  const handleDownloadTailoredCv = () => {
+    const header = `=====================================================\nCANDIDATE TAILORED CV - OPTIMIZED FOR ${input.targetRole.toUpperCase()}\n=====================================================\n\n`;
+    const roleDetails = `TARGET ROLE: ${input.targetRole}\nLOCATION PREFERENCE: ${input.locationPreference}\nEXTRACTED SENIORITY: ${result.profileSummary.extractedSeniority}\n\n`;
+    
+    const bulletsSection = `-----------------------------------------------------\nATS-ENGINEERED STAR BULLETS (RECOMMENDED FOR INSERTION)\n-----------------------------------------------------\n` +
+      result.atsOptimizedBullets.map((b, i) => `${i + 1}. • ${b.optimizedBullet}\n   Impact & Edge: ${b.impactReason}`).join('\n\n') + '\n\n';
+
+    const originalSection = `-----------------------------------------------------\nORIGINAL RESUME DOCUMENT REFERENCE\n-----------------------------------------------------\n${input.candidateCv}`;
+
+    const content = header + roleDetails + bulletsSection + originalSection;
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Tailored-CV-${input.targetRole.replace(/\s+/g, '-')}.txt`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-6">
       {/* Top Banner / Navigation back to Edit */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900/60 border border-slate-800 p-3.5 rounded-xl">
-        <div className="flex items-center gap-2 text-xs text-slate-400">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-zinc-900/60 border border-zinc-800/80 p-3.5 rounded-xl">
+        <div className="flex items-center gap-2 text-xs text-zinc-400">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
           <span>Analysis Complete for target role:</span>
           <span className="text-white font-semibold">{input.targetRole}</span>
         </div>
 
-        <button
-          type="button"
-          onClick={onEditInputs}
-          className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors"
-        >
-          <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
-          <span>Modify Inputs & Preferences</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleDownloadTailoredCv}
+            className="flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700/60 transition-all"
+            title="Download tailored plain text CV"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Download Tailored CV</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onEditInputs}
+            className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors"
+          >
+            <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
+            <span>Modify Inputs & Preferences</span>
+          </button>
+        </div>
       </div>
 
       {/* Main Hero Score Gauge */}

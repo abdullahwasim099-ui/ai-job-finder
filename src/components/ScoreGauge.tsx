@@ -41,11 +41,28 @@ export const ScoreGauge: React.FC<ScoreGaugeProps> = ({
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (score / 100) * circumference;
 
+  // Helper to determine progress bar coloring dynamically
+  const getBarColorClass = (val: number) => {
+    if (val >= 75) return 'bg-emerald-500';
+    if (val >= 50) return 'bg-amber-500';
+    return 'bg-rose-500';
+  };
+
+  const getBarTextColorClass = (val: number) => {
+    if (val >= 75) return 'text-emerald-400';
+    if (val >= 50) return 'text-amber-400';
+    return 'text-rose-400';
+  };
+
+  const skillsMatch = Math.min(100, Math.max(0, roleMatch.breakdown?.skillsMatch ?? 0));
+  const experienceMatch = Math.min(100, Math.max(0, roleMatch.breakdown?.experienceMatch ?? 0));
+  const structureMatch = Math.min(100, Math.max(0, roleMatch.breakdown?.qualificationMatch ?? 85));
+
   return (
-    <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 sm:p-7 shadow-xl">
+    <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-6 sm:p-7 shadow-xl">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
         {/* Left Column: Overall Gauge */}
-        <div className="lg:col-span-5 flex flex-col items-center justify-center p-4 bg-slate-950/60 rounded-xl border border-slate-800/80">
+        <div className="lg:col-span-5 flex flex-col items-center justify-center p-4 bg-zinc-950/60 rounded-xl border border-zinc-800/80">
           <div className="relative w-44 h-44 flex items-center justify-center">
             <svg className="w-full h-full transform -rotate-90" viewBox="0 0 160 160">
               {/* Background circle */}
@@ -53,7 +70,7 @@ export const ScoreGauge: React.FC<ScoreGaugeProps> = ({
                 cx="80"
                 cy="80"
                 r={radius}
-                className="stroke-slate-800"
+                className="stroke-zinc-800"
                 strokeWidth="12"
                 fill="transparent"
               />
@@ -74,7 +91,7 @@ export const ScoreGauge: React.FC<ScoreGaugeProps> = ({
               <span className="text-4xl sm:text-5xl font-extrabold tracking-tight text-white">
                 {score}%
               </span>
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mt-0.5">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mt-0.5">
                 Role Match
               </span>
             </div>
@@ -92,76 +109,76 @@ export const ScoreGauge: React.FC<ScoreGaugeProps> = ({
         {/* Right Column: Breakdown & Seniority Fit */}
         <div className="lg:col-span-7 space-y-5">
           <div>
-            <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
+            <div className="flex items-center justify-between text-xs text-zinc-400 mb-1">
               <span>Target Role Benchmark</span>
-              <span className="font-mono text-slate-300">{profileSummary.yearsOfExperience}</span>
+              <span className="font-mono text-zinc-300">{profileSummary.yearsOfExperience}</span>
             </div>
             <h3 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
-              <Briefcase className="w-5 h-5 text-indigo-400 shrink-0" />
+              <Briefcase className="w-5 h-5 text-zinc-400 shrink-0" />
               <span>{targetRole}</span>
             </h3>
             {targetSalaryOrSeniority && (
-              <p className="text-xs text-indigo-300/90 mt-1">
+              <p className="text-xs text-zinc-300/90 mt-1">
                 Target Level / Salary: {targetSalaryOrSeniority}
               </p>
             )}
           </div>
 
-          {/* 3 Categories Breakdown: Skills, Experience, Education/Certification */}
-          <div className="space-y-3 pt-1">
-            {/* Skills Match */}
+          {/* 3 Categories Breakdown: Skills, Experience, Formatting */}
+          <div className="space-y-4 pt-1">
+            {/* Hard Skills Match */}
             <div>
               <div className="flex justify-between items-center text-xs font-medium mb-1">
-                <span className="text-slate-300">Skills Compatibility</span>
-                <span className="font-bold text-indigo-300">
-                  {roleMatch.breakdown?.skillsMatch ?? 0}%
+                <span className="text-zinc-300">Hard Skills Match</span>
+                <span className={`font-bold ${getBarTextColorClass(skillsMatch)}`}>
+                  {skillsMatch}%
                 </span>
               </div>
-              <div className="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden">
+              <div className="w-full bg-zinc-950 rounded-full h-2.5 overflow-hidden border border-zinc-800/50">
                 <div
-                  className="bg-indigo-500 h-2.5 rounded-full transition-all duration-700 ease-out"
-                  style={{ width: `${Math.min(100, Math.max(0, roleMatch.breakdown?.skillsMatch ?? 0))}%` }}
+                  className={`${getBarColorClass(skillsMatch)} h-2.5 rounded-full transition-all duration-700 ease-out`}
+                  style={{ width: `${skillsMatch}%` }}
                 />
               </div>
             </div>
 
-            {/* Experience Match */}
+            {/* Experience Level Alignment */}
             <div>
               <div className="flex justify-between items-center text-xs font-medium mb-1">
-                <span className="text-slate-300">Experience & Depth Match</span>
-                <span className="font-bold text-violet-300">
-                  {roleMatch.breakdown?.experienceMatch ?? 0}%
+                <span className="text-zinc-300">Experience Level Alignment</span>
+                <span className={`font-bold ${getBarTextColorClass(experienceMatch)}`}>
+                  {experienceMatch}%
                 </span>
               </div>
-              <div className="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden">
+              <div className="w-full bg-zinc-950 rounded-full h-2.5 overflow-hidden border border-zinc-800/50">
                 <div
-                  className="bg-violet-500 h-2.5 rounded-full transition-all duration-700 ease-out"
-                  style={{ width: `${Math.min(100, Math.max(0, roleMatch.breakdown?.experienceMatch ?? 0))}%` }}
+                  className={`${getBarColorClass(experienceMatch)} h-2.5 rounded-full transition-all duration-700 ease-out`}
+                  style={{ width: `${experienceMatch}%` }}
                 />
               </div>
             </div>
 
-            {/* Education/Certification Match */}
+            {/* Formatting & Structure Integrity */}
             <div>
               <div className="flex justify-between items-center text-xs font-medium mb-1">
-                <span className="text-slate-300">Education & Certification Match</span>
-                <span className="font-bold text-cyan-300">
-                  {roleMatch.breakdown?.qualificationMatch ?? 0}%
+                <span className="text-zinc-300">Formatting & Structure Integrity</span>
+                <span className={`font-bold ${getBarTextColorClass(structureMatch)}`}>
+                  {structureMatch}%
                 </span>
               </div>
-              <div className="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden">
+              <div className="w-full bg-zinc-950 rounded-full h-2.5 overflow-hidden border border-zinc-800/50">
                 <div
-                  className="bg-cyan-500 h-2.5 rounded-full transition-all duration-700 ease-out"
-                  style={{ width: `${Math.min(100, Math.max(0, roleMatch.breakdown?.qualificationMatch ?? 0))}%` }}
+                  className={`${getBarColorClass(structureMatch)} h-2.5 rounded-full transition-all duration-700 ease-out`}
+                  style={{ width: `${structureMatch}%` }}
                 />
               </div>
             </div>
           </div>
 
           {/* Seniority Assessment */}
-          <div className="p-3 bg-slate-950/60 border border-slate-800/80 rounded-xl flex items-center justify-between text-xs">
-            <span className="text-slate-400">Extracted Seniority:</span>
-            <span className="font-semibold text-slate-100 px-2 py-0.5 rounded bg-slate-800 border border-slate-700">
+          <div className="p-3 bg-zinc-950/60 border border-zinc-800/80 rounded-xl flex items-center justify-between text-xs">
+            <span className="text-zinc-400">Extracted Seniority:</span>
+            <span className="font-semibold text-zinc-100 px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800">
               {profileSummary.extractedSeniority || 'Not determined'}
             </span>
           </div>

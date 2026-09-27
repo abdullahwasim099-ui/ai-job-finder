@@ -33,11 +33,10 @@ export const EditorialHero: React.FC<EditorialHeroProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-y-12 lg:gap-x-10 items-center overflow-visible">
           {/* Left Column (Columns 1 to 8): Heading & Sub-grid */}
           <div className="col-span-12 lg:col-span-8 z-10 text-left space-y-7">
-            {/* Typographic Kicker (No Pill, Anti-Slop Discipline) */}
-            <div className="flex items-center gap-3 text-left">
-              <span className="w-8 h-px bg-indigo-500" />
-              <span className="text-[11px] font-mono uppercase tracking-[0.25em] text-indigo-400 font-semibold">
-                EXECUTIVE CAREER INTELLIGENCE · VERIFIED GROUNDING
+            {/* Typographic Kicker (Compact borderless pill) */}
+            <div className="text-left">
+              <span className="inline-block px-3 py-1 bg-zinc-900 text-zinc-400 rounded-full text-[11px] font-mono uppercase tracking-widest font-semibold">
+                EXECUTIVE CAREER INTELLIGENCE • VERIFIED GROUNDING
               </span>
             </div>
 
@@ -58,7 +57,7 @@ export const EditorialHero: React.FC<EditorialHeroProps> = ({
                 <button
                   type="button"
                   onClick={onCtaClick}
-                  className="w-full sm:w-auto py-3.5 px-7 rounded-xl font-bold text-sm bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-2.5 transition-all cursor-pointer group"
+                  className="w-full sm:w-auto py-3.5 px-7 rounded-xl font-bold text-sm bg-white text-black border border-zinc-200 hover:bg-zinc-100 hover:border-white/20 hover:text-black flex items-center justify-center gap-2.5 transition-all duration-200 cursor-pointer group shadow-none"
                 >
                   <span>Launch Executive Intelligence</span>
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -67,7 +66,7 @@ export const EditorialHero: React.FC<EditorialHeroProps> = ({
 
               {/* Compact Body Paragraph (Columns 6-12) */}
               <div className="sm:col-span-7 text-left border-l border-slate-800/80 pl-5">
-                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed font-normal text-left">
+                <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed max-w-xl font-normal text-left">
                   Deconstruct applicant tracking systems with precision. Real-time skill gap
                   benchmarking, automated STAR copycrafting, and Google-grounded executive job
                   tracking without hallucinations.

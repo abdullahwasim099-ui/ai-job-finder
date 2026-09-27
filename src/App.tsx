@@ -35,7 +35,7 @@ import { EditorialHero } from './components/EditorialHero';
 import { LoadingScreen } from './components/LoadingScreen';
 import { HistoryDrawer } from './components/HistoryDrawer';
 
-const STORAGE_KEY = 'careerpulse_ats_history_v3';
+const STORAGE_KEY = 'careerpulse_history';
 
 const INITIAL_INPUT: AnalysisInput = {
   candidateCv: '',
@@ -59,9 +59,26 @@ const INITIAL_COVER_LETTER_INPUT: CoverLetterInput = {
 
 export default function App() {
   const [activeTool, setActiveTool] = useState<ToolType>('live_job_finder'); // Set to live_job_finder for Turn 8!
+  const [cvText, setCvText] = useState<string>('');
   const [input, setInput] = useState<AnalysisInput>(INITIAL_INPUT);
   const [expertResult, setExpertResult] = useState<ExpertAtsResult | null>(null);
   const [comprehensiveResult, setComprehensiveResult] = useState<CareerAnalysisResult | null>(null);
+
+  // Keep input and coverLetterInput synchronized with cvText
+  useEffect(() => {
+    setInput((prev) => {
+      if (prev.candidateCv !== cvText) {
+        return { ...prev, candidateCv: cvText };
+      }
+      return prev;
+    });
+    setCoverLetterInput((prev) => {
+      if (prev.candidateCv !== cvText) {
+        return { ...prev, candidateCv: cvText };
+      }
+      return prev;
+    });
+  }, [cvText]);
 
   // Turn 3 state: Cover letter & STAR
   const [coverLetterInput, setCoverLetterInput] = useState<CoverLetterInput>(INITIAL_COVER_LETTER_INPUT);
@@ -99,16 +116,29 @@ export default function App() {
   };
 
   const handleInputChange = (updated: Partial<AnalysisInput>) => {
-    setInput((prev) => ({ ...prev, ...updated }));
+    setInput((prev) => {
+      const next = { ...prev, ...updated };
+      if (updated.candidateCv !== undefined && updated.candidateCv !== cvText) {
+        setCvText(updated.candidateCv);
+      }
+      return next;
+    });
     if (errorMessage) setErrorMessage(null);
   };
 
   const handleCoverLetterInputChange = (updated: Partial<CoverLetterInput>) => {
-    setCoverLetterInput((prev) => ({ ...prev, ...updated }));
+    setCoverLetterInput((prev) => {
+      const next = { ...prev, ...updated };
+      if (updated.candidateCv !== undefined && updated.candidateCv !== cvText) {
+        setCvText(updated.candidateCv);
+      }
+      return next;
+    });
     if (errorMessage) setErrorMessage(null);
   };
 
   const handleLoadSample = (sample: SampleProfile) => {
+    setCvText(sample.data.candidateCv || '');
     setInput((prev) => ({
       ...prev,
       ...sample.data,
@@ -116,7 +146,7 @@ export default function App() {
     }));
     // Also preload into cover letter input for seamless cross-tool use
     setCoverLetterInput({
-      candidateCv: sample.data.candidateCv,
+      candidateCv: sample.data.candidateCv || '',
       jobDescription: sample.data.targetJobDescription || '',
       companyName: 'CloudScale Inc.',
     });
@@ -337,7 +367,7 @@ export default function App() {
     (activeTool === 'career_advisor' && !!comprehensiveResult);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#09090B] text-slate-100 flex flex-col font-sans">
       {/* Top Header */}
       <Header
         activeTool={activeTool}
@@ -356,7 +386,7 @@ export default function App() {
       <main className="flex-1 w-full flex flex-col">
         {/* SECTION A: Upper Hero & Bleeding Visual Showcase */}
         {viewMode === 'input' && !isLoading && (
-          <section className="w-full relative bg-slate-950/40 overflow-visible border-b border-white/5">
+          <section className="w-full relative bg-[#09090B]/40 overflow-visible border-b border-white/5">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <EditorialHero
                 activeToolName={activeTool}
@@ -374,7 +404,7 @@ export default function App() {
         {/* SECTION B: Contrasting Background & Overlapping Workspace Container */}
         <section
           id="active-tool-workspace"
-          className={`relative z-10 w-full transition-colors duration-500 bg-[#030712] ${
+          className={`relative z-10 w-full transition-colors duration-500 bg-[#09090B] ${
             viewMode === 'input' && !isLoading ? 'pt-36' : 'pt-10'
           } pb-20 border-t border-indigo-950/40`}
         >
@@ -460,6 +490,8 @@ export default function App() {
                 onSubmit={handleAnalyze}
                 isLoading={isLoading}
                 onLoadSample={handleLoadSample}
+                cvText={cvText}
+                setCvText={setCvText}
               />
             )}
 
@@ -485,6 +517,8 @@ export default function App() {
                 onSubmit={handleAnalyze}
                 isLoading={isLoading}
                 onLoadSample={handleLoadSample}
+                cvText={cvText}
+                setCvText={setCvText}
               />
             )}
 
@@ -514,7 +548,7 @@ export default function App() {
       />
 
       {/* Footer */}
-      <footer className="border-t border-slate-800/80 bg-slate-950/70 py-6 text-center text-xs text-slate-500">
+      <footer className="border-t border-zinc-800/80 bg-[#09090B]/70 py-6 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <span className="font-bold text-slate-300">CareerPulse</span>
