@@ -7,26 +7,42 @@ import React, { useState, useEffect } from 'react';
 import {
   Sparkles,
   AlertCircle,
-  FileSearch,
-  CheckCircle2,
-  ArrowRight,
-  RotateCcw,
+  Mail,
+  Target,
+  Compass,
 } from 'lucide-react';
-import { AnalysisInput, CareerAnalysisResult, HistoryItem } from './types/career';
+import {
+  AnalysisInput,
+  CareerAnalysisResult,
+  ExpertAtsResult,
+  CoverLetterInput,
+  CoverLetterResult,
+  HistoryItem,
+} from './types/career';
 import { SAMPLE_PROFILES, SampleProfile } from './data/sampleProfiles';
-import { Header } from './components/Header';
+import { Header, ToolType } from './components/Header';
 import { InputPanel } from './components/InputPanel';
 import { ResultsDashboard } from './components/ResultsDashboard';
+import { ExpertAtsDashboard } from './components/ExpertAtsDashboard';
+import { CoverLetterPanel } from './components/CoverLetterPanel';
+import { CoverLetterResultView } from './components/CoverLetterResultView';
+import { InterviewCoachView } from './components/InterviewCoachView';
+import { CareerMatcherView } from './components/CareerMatcherView';
+import { AtsPostingScorerView } from './components/AtsPostingScorerView';
+import { CareerCopywriterView } from './components/CareerCopywriterView';
+import { LiveJobFinderView } from './components/LiveJobFinderView';
+import { EditorialHero } from './components/EditorialHero';
 import { LoadingScreen } from './components/LoadingScreen';
 import { HistoryDrawer } from './components/HistoryDrawer';
 
-const STORAGE_KEY = 'careerpulse_ats_history_v1';
+const STORAGE_KEY = 'careerpulse_ats_history_v3';
 
 const INITIAL_INPUT: AnalysisInput = {
   candidateCv: '',
   targetRole: '',
   locationPreference: 'Remote / Flexible',
   targetSalaryOrSeniority: '',
+  mode: 'expert_ats',
   userPreferences: {
     workCulture: '',
     industry: '',
@@ -35,9 +51,22 @@ const INITIAL_INPUT: AnalysisInput = {
   targetJobDescription: '',
 };
 
+const INITIAL_COVER_LETTER_INPUT: CoverLetterInput = {
+  candidateCv: '',
+  jobDescription: '',
+  companyName: '',
+};
+
 export default function App() {
+  const [activeTool, setActiveTool] = useState<ToolType>('live_job_finder'); // Set to live_job_finder for Turn 8!
   const [input, setInput] = useState<AnalysisInput>(INITIAL_INPUT);
-  const [result, setResult] = useState<CareerAnalysisResult | null>(null);
+  const [expertResult, setExpertResult] = useState<ExpertAtsResult | null>(null);
+  const [comprehensiveResult, setComprehensiveResult] = useState<CareerAnalysisResult | null>(null);
+
+  // Turn 3 state: Cover letter & STAR
+  const [coverLetterInput, setCoverLetterInput] = useState<CoverLetterInput>(INITIAL_COVER_LETTER_INPUT);
+  const [coverLetterResult, setCoverLetterResult] = useState<CoverLetterResult | null>(null);
+
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isRefining, setIsRefining] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -57,31 +86,16 @@ export default function App() {
     }
   }, []);
 
-  // Save history to localStorage
-  const saveToHistory = (res: CareerAnalysisResult, inData: AnalysisInput) => {
-    try {
-      const nameSnippet =
-        inData.candidateCv.split('\n').find((l) => l.trim().length > 0)?.substring(0, 30) ||
-        'Candidate CV';
-
-      const newItem: HistoryItem = {
-        id: `scan-${Date.now()}`,
-        timestamp: Date.now(),
-        targetRole: inData.targetRole,
-        candidateNameSnippet: nameSnippet,
-        overallScore: res.roleMatch.overallScore,
-        result: res,
-        input: inData,
-      };
-
-      setHistory((prev) => {
-        const updated = [newItem, ...prev.slice(0, 19)];
+  const saveToHistory = (item: HistoryItem) => {
+    setHistory((prev) => {
+      const updated = [item, ...prev.slice(0, 19)];
+      try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-        return updated;
-      });
-    } catch (e) {
-      console.error('Failed to save scan to storage:', e);
-    }
+      } catch (e) {
+        console.error('Failed to save to storage:', e);
+      }
+      return updated;
+    });
   };
 
   const handleInputChange = (updated: Partial<AnalysisInput>) => {
@@ -89,18 +103,106 @@ export default function App() {
     if (errorMessage) setErrorMessage(null);
   };
 
+  const handleCoverLetterInputChange = (updated: Partial<CoverLetterInput>) => {
+    setCoverLetterInput((prev) => ({ ...prev, ...updated }));
+    if (errorMessage) setErrorMessage(null);
+  };
+
   const handleLoadSample = (sample: SampleProfile) => {
-    setInput(sample.data);
+    setInput((prev) => ({
+      ...prev,
+      ...sample.data,
+      mode: prev.mode || 'expert_ats',
+    }));
+    // Also preload into cover letter input for seamless cross-tool use
+    setCoverLetterInput({
+      candidateCv: sample.data.candidateCv,
+      jobDescription: sample.data.targetJobDescription || '',
+      companyName: 'CloudScale Inc.',
+    });
     setErrorMessage(null);
   };
 
+  // Submit ATS / Career Advisor analysis
   const handleAnalyze = async () => {
-    if (!input.candidateCv.trim()) {
+    const isRaw = !!input.rawSystemInput?.trim();
+    if (!isRaw && !input.candidateCv.trim()) {
       setErrorMessage('Please paste or upload candidate CV text.');
       return;
     }
-    if (!input.targetRole.trim()) {
-      setErrorMessage('Please specify a target role or field.');
+    if (!isRaw && !input.targetRole.trim()) {
+      setErrorMessage('Please specify a target role.');
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    const mode = activeTool === 'career_advisor' ? 'comprehensive' : 'expert_ats';
+    const endpoint = mode === 'expert_ats' ? '/api/ats-parse' : '/api/analyze';
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ...input, mode }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to complete analysis.');
+      }
+
+      if (mode === 'expert_ats') {
+        setExpertResult(data);
+        setComprehensiveResult(null);
+        saveToHistory({
+          id: `scan-${Date.now()}`,
+          timestamp: Date.now(),
+          targetRole: input.targetRole || 'Target Role',
+          candidateNameSnippet: data.profile?.name || 'Candidate',
+          overallScore: data.compatibility?.overallScore || 0,
+          mode: 'expert_ats',
+          expertResult: data,
+          input,
+        });
+      } else {
+        setComprehensiveResult(data);
+        setExpertResult(null);
+        saveToHistory({
+          id: `scan-${Date.now()}`,
+          timestamp: Date.now(),
+          targetRole: input.targetRole || 'Target Role',
+          candidateNameSnippet: input.candidateCv.substring(0, 25),
+          overallScore: data.roleMatch?.overallScore || 0,
+          mode: 'comprehensive',
+          result: data,
+          input,
+        });
+      }
+
+      setViewMode('results');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err: any) {
+      console.error('Analysis error:', err);
+      setErrorMessage(err.message || 'An error occurred while connecting to the engine.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Submit Cover Letter & STAR Bullets
+  const handleGenerateCoverLetter = async () => {
+    const isRaw = !!coverLetterInput.rawTaggedInput?.trim();
+    if (!isRaw && !coverLetterInput.candidateCv.trim()) {
+      setErrorMessage('Candidate CV text is required.');
+      return;
+    }
+    if (!isRaw && !coverLetterInput.jobDescription.trim()) {
+      setErrorMessage('Target Job Description is required.');
       return;
     }
 
@@ -108,29 +210,36 @@ export default function App() {
     setErrorMessage(null);
 
     try {
-      const response = await fetch('/api/analyze', {
+      const response = await fetch('/api/generate-cover-letter', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(input),
+        body: JSON.stringify(coverLetterInput),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to complete resume analysis.');
+        throw new Error(data.error || 'Failed to generate cover letter.');
       }
 
-      setResult(data);
-      saveToHistory(data, input);
+      setCoverLetterResult(data);
+      saveToHistory({
+        id: `cover-${Date.now()}`,
+        timestamp: Date.now(),
+        targetRole: `${coverLetterInput.companyName || 'Application'} Cover Letter`,
+        candidateNameSnippet: coverLetterInput.candidateCv.substring(0, 25),
+        mode: 'cover_letter',
+        coverLetterResult: data,
+        coverLetterInput,
+      });
+
       setViewMode('results');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err: any) {
-      console.error('Analysis error:', err);
-      setErrorMessage(
-        err.message || 'An error occurred while connecting to the Career Advisor engine.'
-      );
+      console.error('Cover letter error:', err);
+      setErrorMessage(err.message || 'Failed to generate cover letter.');
     } finally {
       setIsLoading(false);
     }
@@ -140,13 +249,17 @@ export default function App() {
     setIsRefining(true);
     setErrorMessage(null);
 
+    const mode = activeTool === 'career_advisor' ? 'comprehensive' : 'expert_ats';
+    const endpoint = mode === 'expert_ats' ? '/api/ats-parse' : '/api/analyze';
+
     try {
       const payload: AnalysisInput = {
         ...input,
+        mode,
         diagnosticAnswers: answers,
       };
 
-      const response = await fetch('/api/analyze', {
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -157,11 +270,15 @@ export default function App() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to refine resume analysis.');
+        throw new Error(data.error || 'Failed to refine analysis.');
       }
 
-      setResult(data);
-      saveToHistory(data, payload);
+      if (mode === 'expert_ats') {
+        setExpertResult(data);
+      } else {
+        setComprehensiveResult(data);
+      }
+
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err: any) {
       console.error('Refinement error:', err);
@@ -172,15 +289,31 @@ export default function App() {
   };
 
   const handleReset = () => {
-    setInput(INITIAL_INPUT);
-    setResult(null);
+    if (activeTool === 'cover_letter') {
+      setCoverLetterResult(null);
+    } else if (activeTool === 'ats_parser') {
+      setExpertResult(null);
+    } else {
+      setComprehensiveResult(null);
+    }
     setViewMode('input');
     setErrorMessage(null);
   };
 
   const handleRestoreHistory = (item: HistoryItem) => {
-    setInput(item.input);
-    setResult(item.result);
+    if (item.mode === 'cover_letter' && item.coverLetterResult) {
+      setActiveTool('cover_letter');
+      if (item.coverLetterInput) setCoverLetterInput(item.coverLetterInput);
+      setCoverLetterResult(item.coverLetterResult);
+    } else if (item.mode === 'expert_ats' && item.expertResult) {
+      setActiveTool('ats_parser');
+      if (item.input) setInput(item.input);
+      setExpertResult(item.expertResult);
+    } else if (item.result) {
+      setActiveTool('career_advisor');
+      if (item.input) setInput(item.input);
+      setComprehensiveResult(item.result);
+    }
     setViewMode('results');
     setErrorMessage(null);
   };
@@ -198,73 +331,176 @@ export default function App() {
     localStorage.removeItem(STORAGE_KEY);
   };
 
+  const hasCurrentResult =
+    (activeTool === 'cover_letter' && !!coverLetterResult) ||
+    (activeTool === 'ats_parser' && !!expertResult) ||
+    (activeTool === 'career_advisor' && !!comprehensiveResult);
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
       {/* Top Header */}
       <Header
+        activeTool={activeTool}
+        onSelectTool={(tool) => {
+          setActiveTool(tool);
+          setViewMode('input');
+          setErrorMessage(null);
+        }}
         onOpenHistory={() => setIsHistoryOpen(true)}
         historyCount={history.length}
         onReset={handleReset}
-        hasResult={!!result}
+        hasResult={hasCurrentResult}
       />
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-8">
-        {/* Hero Section if on Input View */}
+      {/* Main Content Area */}
+      <main className="flex-1 w-full flex flex-col">
+        {/* SECTION A: Upper Hero & Bleeding Visual Showcase */}
         {viewMode === 'input' && !isLoading && (
-          <div className="text-center max-w-3xl mx-auto space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Full-Stack ATS Resume Intelligence & Role Matching</span>
+          <section className="w-full relative bg-slate-950/40 overflow-visible border-b border-white/5">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <EditorialHero
+                activeToolName={activeTool}
+                onCtaClick={() => {
+                  const el = document.getElementById('active-tool-workspace');
+                  if (el) {
+                    el.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+              />
             </div>
-            <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white">
-              AI Career Advisor &{' '}
-              <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-cyan-400 bg-clip-text text-transparent">
-                ATS Resume Parser
-              </span>
-            </h1>
-            <p className="text-sm sm:text-base text-slate-400 max-w-2xl mx-auto leading-relaxed">
-              Calculate precise role compatibility scores, uncover hidden ATS keyword gaps, rewrite
-              resumes into high-impact STAR bullets, and generate targeted search strategies.
-            </p>
-          </div>
+          </section>
         )}
 
-        {/* Global Error Banner */}
-        {errorMessage && (
-          <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-200 flex items-start gap-3 animate-in fade-in">
-            <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
-            <div className="text-sm flex-1">
-              <span className="font-semibold">Notice: </span>
-              {errorMessage}
-            </div>
-          </div>
-        )}
+        {/* SECTION B: Contrasting Background & Overlapping Workspace Container */}
+        <section
+          id="active-tool-workspace"
+          className={`relative z-10 w-full transition-colors duration-500 bg-[#030712] ${
+            viewMode === 'input' && !isLoading ? 'pt-36' : 'pt-10'
+          } pb-20 border-t border-indigo-950/40`}
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+            {/* Global Error Banner */}
+            {errorMessage && (
+              <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-200 flex items-start gap-3 animate-in fade-in">
+                <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+                <div className="text-sm flex-1">
+                  <span className="font-semibold">Notice: </span>
+                  {errorMessage}
+                </div>
+              </div>
+            )}
 
-        {/* Loading Screen */}
-        {isLoading && <LoadingScreen />}
+            {/* Loading Screen */}
+            {isLoading && <LoadingScreen />}
 
-        {/* Input Form Mode */}
-        {viewMode === 'input' && !isLoading && (
-          <InputPanel
-            input={input}
-            onChange={handleInputChange}
-            onSubmit={handleAnalyze}
-            isLoading={isLoading}
-            onLoadSample={handleLoadSample}
+            {/* ================= Tool 8: Executive Live Job Finder (Turn 8) ================= */}
+        {activeTool === 'live_job_finder' && (
+          <LiveJobFinderView
+            initialRole={input.targetRole || 'Lead Platform Architect'}
+            initialLocation={input.locationPreference || 'Remote'}
+            initialSkills={input.userPreferences?.keyHardSkills || 'Distributed Systems, Microservices, Node.js, AWS, Kubernetes, Kafka'}
+            onSelectListingForScorer={(listing) => {
+              setActiveTool('ats_posting_scorer');
+            }}
           />
         )}
 
-        {/* Results Dashboard Mode */}
-        {viewMode === 'results' && result && !isLoading && (
-          <ResultsDashboard
-            result={result}
-            input={input}
-            onRefineWithAnswers={handleRefineWithAnswers}
-            isRefining={isRefining}
-            onEditInputs={() => setViewMode('input')}
+        {/* ================= Tool 7: Professional Career Copywriter (Turn 7) ================= */}
+        {activeTool === 'career_copywriter' && (
+          <CareerCopywriterView initialCv={input.candidateCv || coverLetterInput.candidateCv} />
+        )}
+
+        {/* ================= Tool 6: ATS Scoring Engine for Job Postings (Turn 6) ================= */}
+        {activeTool === 'ats_posting_scorer' && (
+          <AtsPostingScorerView />
+        )}
+
+        {/* ================= Tool 5: AI Career Matcher & Job Search (Turn 5) ================= */}
+        {activeTool === 'career_matcher' && (
+          <CareerMatcherView initialCv={input.candidateCv || coverLetterInput.candidateCv} />
+        )}
+
+        {/* ================= Tool 4: AI Interview Coach (Turn 4) ================= */}
+        {activeTool === 'interview_coach' && (
+          <InterviewCoachView
+            initialCv={input.candidateCv || coverLetterInput.candidateCv}
+            initialRole={input.targetRole || 'Lead Platform Architect'}
           />
         )}
+
+        {/* ================= Tool 1: Cover Letter & STAR Bullets (Turn 3) ================= */}
+        {activeTool === 'cover_letter' && !isLoading && (
+          <>
+            {viewMode === 'input' && (
+              <CoverLetterPanel
+                input={coverLetterInput}
+                onChange={handleCoverLetterInputChange}
+                onSubmit={handleGenerateCoverLetter}
+                isLoading={isLoading}
+              />
+            )}
+
+            {viewMode === 'results' && coverLetterResult && (
+              <CoverLetterResultView
+                result={coverLetterResult}
+                input={coverLetterInput}
+                onEditInputs={() => setViewMode('input')}
+              />
+            )}
+          </>
+        )}
+
+        {/* ================= Tool 2: ATS Parser (Turn 2) ================= */}
+        {activeTool === 'ats_parser' && !isLoading && (
+          <>
+            {viewMode === 'input' && (
+              <InputPanel
+                input={{ ...input, mode: 'expert_ats' }}
+                onChange={handleInputChange}
+                onSubmit={handleAnalyze}
+                isLoading={isLoading}
+                onLoadSample={handleLoadSample}
+              />
+            )}
+
+            {viewMode === 'results' && expertResult && (
+              <ExpertAtsDashboard
+                result={expertResult}
+                input={input}
+                onRefineWithAnswers={handleRefineWithAnswers}
+                isRefining={isRefining}
+                onEditInputs={() => setViewMode('input')}
+              />
+            )}
+          </>
+        )}
+
+        {/* ================= Tool 3: Career Advisor (Turn 1) ================= */}
+        {activeTool === 'career_advisor' && !isLoading && (
+          <>
+            {viewMode === 'input' && (
+              <InputPanel
+                input={{ ...input, mode: 'comprehensive' }}
+                onChange={handleInputChange}
+                onSubmit={handleAnalyze}
+                isLoading={isLoading}
+                onLoadSample={handleLoadSample}
+              />
+            )}
+
+            {viewMode === 'results' && comprehensiveResult && (
+              <ResultsDashboard
+                result={comprehensiveResult}
+                input={input}
+                onRefineWithAnswers={handleRefineWithAnswers}
+                isRefining={isRefining}
+                onEditInputs={() => setViewMode('input')}
+              />
+            )}
+          </>
+        )}
+          </div>
+        </section>
       </main>
 
       {/* History Drawer */}
@@ -283,9 +519,9 @@ export default function App() {
           <div className="flex items-center gap-2">
             <span className="font-bold text-slate-300">CareerPulse</span>
             <span>•</span>
-            <span>ATS Resume Parser Engine</span>
+            <span>ATS Resume Parser & Career Copywriter</span>
           </div>
-          <div>Strict schema compliant • STAR Method optimization • Real-time scoring</div>
+          <div>Strict Schema • STAR Method Metrics • Tailored Cover Letters &lt; 250 Words</div>
         </div>
       </footer>
     </div>

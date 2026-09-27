@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, History, Trash2, ArrowUpRight, Calendar, Award } from 'lucide-react';
+import { X, History, Trash2, ArrowUpRight, Calendar, Mail, Target, Compass } from 'lucide-react';
 import { HistoryItem } from '../types/career';
 
 interface HistoryDrawerProps {
@@ -35,7 +35,7 @@ export const HistoryDrawer: React.FC<HistoryDrawerProps> = ({
           <div className="p-5 border-b border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <History className="w-5 h-5 text-indigo-400" />
-              <h3 className="text-base font-bold text-white">Scan History</h3>
+              <h3 className="text-base font-bold text-white">Scan & Draft History</h3>
               <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">
                 {items.length}
               </span>
@@ -66,9 +66,9 @@ export const HistoryDrawer: React.FC<HistoryDrawerProps> = ({
             {items.length === 0 ? (
               <div className="text-center py-12 text-slate-500 space-y-2">
                 <History className="w-10 h-10 mx-auto text-slate-600" />
-                <p className="text-sm font-medium">No previous scans found</p>
+                <p className="text-sm font-medium">No previous items found</p>
                 <p className="text-xs">
-                  Your analyzed resumes and job compatibility reports will appear here automatically.
+                  Your analyzed resumes, reports, and cover letters will appear here automatically.
                 </p>
               </div>
             ) : (
@@ -80,13 +80,8 @@ export const HistoryDrawer: React.FC<HistoryDrawerProps> = ({
                   minute: '2-digit',
                 });
 
+                const isCoverLetter = item.mode === 'cover_letter';
                 const score = item.overallScore;
-                let scoreBadgeClass = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-                if (score < 55) {
-                  scoreBadgeClass = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
-                } else if (score < 75) {
-                  scoreBadgeClass = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-                }
 
                 return (
                   <div
@@ -95,19 +90,33 @@ export const HistoryDrawer: React.FC<HistoryDrawerProps> = ({
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div>
+                        <div className="flex items-center gap-1.5 mb-1">
+                          {isCoverLetter ? (
+                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-violet-500/10 text-violet-300 border border-violet-500/20 flex items-center gap-1">
+                              <Mail className="w-3 h-3" />
+                              Cover Letter
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 flex items-center gap-1">
+                              <Target className="w-3 h-3" />
+                              ATS Gap Analysis
+                            </span>
+                          )}
+                        </div>
+
                         <h4 className="text-sm font-bold text-white group-hover:text-indigo-300 transition-colors">
                           {item.targetRole}
                         </h4>
                         <p className="text-xs text-slate-400 font-mono line-clamp-1 mt-0.5">
-                          {item.candidateNameSnippet || 'Resume Scan'}
+                          {item.candidateNameSnippet || 'Resume'}
                         </p>
                       </div>
 
-                      <span
-                        className={`text-xs font-bold px-2 py-0.5 rounded-full border ${scoreBadgeClass}`}
-                      >
-                        {score}%
-                      </span>
+                      {score !== undefined && (
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full border bg-indigo-500/10 text-indigo-300 border-indigo-500/30">
+                          {score}%
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 text-[11px] text-slate-500">
