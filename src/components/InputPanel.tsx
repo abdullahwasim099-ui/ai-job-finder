@@ -52,34 +52,78 @@ const LOCATION_PRESETS = [
   'Berlin, Germany',
 ];
 
+// Helper to dynamically load external scripts from CDN
+const loadScript = (src: string): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) {
+      resolve();
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = () => resolve();
+    script.onerror = (err) => reject(err);
+    document.head.appendChild(script);
+  });
+};
+
 // Browser-side document parsing helper functions
 const parsePdfFile = async (arrayBuffer: ArrayBuffer): Promise<string> => {
+  if (!(window as any).pdfjsLib) {
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js');
+  }
+
   const pdfjsLib = (window as any).pdfjsLib;
   if (!pdfjsLib) {
-    throw new Error('PDF.js library is not loaded. Please wait a moment or reload.');
+    throw new Error('PDF.js library could not be loaded dynamically. Please check your network connection.');
   }
+
   // Setup standard worker from CDN
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
-  const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-  const pdf = await loadingTask.promise;
-  let fullText = '';
+  try {
+    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+    const pdf = await loadingTask.promise;
+    let fullText = '';
 
-  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-    const page = await pdf.getPage(pageNum);
-    const textContent = await page.getTextContent();
-    const pageText = textContent.items
-      .map((item: any) => item.str)
-      .join(' ');
-    fullText += pageText + '\n';
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items
+        .map((item: any) => item.str)
+        .join(' ');
+      fullText += pageText + '\n';
+    }
+
+    // Fallback if no text extracted (e.g. Scanned PDF or non-standard format)
+    if (!fullText.trim()) {
+      const decoder = new TextDecoder('utf-8');
+      const rawText = decoder.decode(arrayBuffer);
+      const matches = rawText.match(/[\w\s.,;:!?@()\-+*/=]{4,}/g);
+      if (matches && matches.length > 5) {
+        fullText = matches.join(' ');
+      }
+    }
+    return fullText;
+  } catch (err) {
+    console.warn('PDF.js parsing failed, trying text extraction fallback:', err);
+    const decoder = new TextDecoder('utf-8');
+    const rawText = decoder.decode(arrayBuffer);
+    const matches = rawText.match(/[\w\s.,;:!?@()\-+*/=]{4,}/g);
+    if (matches && matches.length > 5) {
+      return matches.join(' ');
+    }
+    throw err;
   }
-  return fullText;
 };
 
 const parseDocxFile = async (arrayBuffer: ArrayBuffer): Promise<string> => {
+  if (!(window as any).mammoth) {
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js');
+  }
   const mammoth = (window as any).mammoth;
   if (!mammoth) {
-    throw new Error('Mammoth.js library is not loaded. Please wait a moment or reload.');
+    throw new Error('Mammoth.js library could not be loaded dynamically. Please check your network connection.');
   }
   const result = await mammoth.extractRawText({ arrayBuffer });
   return result.value;
@@ -94,6 +138,14 @@ const parseTxtFile = (file: File): Promise<string> => {
     reader.onerror = (err) => reject(err);
     reader.readAsText(file);
   });
+};
+
+const formatBytes = (bytes: number): string => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 };
 
 export const InputPanel: React.FC<InputPanelProps> = ({
@@ -111,6 +163,8 @@ export const InputPanel: React.FC<InputPanelProps> = ({
 
   // Parsing States
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const [uploadedFileSize, setUploadedFileSize] = useState<string | null>(null);
+  const [uploadedFileWordCount, setUploadedFileWordCount] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [parsingError, setParsingError] = useState<string | null>(null);
   const [isParsing, setIsParsing] = useState(false);
@@ -125,6 +179,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
     setIsParsing(true);
     setParsingError(null);
     setUploadedFileName(file.name);
+    setUploadedFileSize(formatBytes(file.size));
 
     try {
       const fileType = file.name.split('.').pop()?.toLowerCase();
@@ -146,6 +201,9 @@ export const InputPanel: React.FC<InputPanelProps> = ({
         throw new Error('Could not extract any readable text from the document. Please verify it contains text layer.');
       }
 
+      const calcWords = extractedText.trim().split(/\s+/).filter(Boolean).length;
+      setUploadedFileWordCount(calcWords);
+
       // Sync both input and custom state
       onChange({ candidateCv: extractedText });
       if (setCvText) {
@@ -155,6 +213,8 @@ export const InputPanel: React.FC<InputPanelProps> = ({
       console.error('File parsing error:', err);
       setParsingError(err.message || 'Error occurred while parsing the file.');
       setUploadedFileName(null);
+      setUploadedFileSize(null);
+      setUploadedFileWordCount(null);
     } finally {
       setIsParsing(false);
     }
@@ -176,6 +236,8 @@ export const InputPanel: React.FC<InputPanelProps> = ({
       setCvText('');
     }
     setUploadedFileName(null);
+    setUploadedFileSize(null);
+    setUploadedFileWordCount(null);
     setParsingError(null);
   };
 
@@ -424,15 +486,23 @@ Senior Full-Stack Engineer with 6+ years of experience designing and scaling mic
                       <div className="text-xs text-zinc-500">Parsing PDF.js / Mammoth arrays dynamically</div>
                     </div>
                   ) : uploadedFileName ? (
-                    <div className="space-y-2 py-1">
-                      <div className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center mx-auto text-zinc-300 border border-zinc-800">
-                        <FileCheck2 className="w-5 h-5 text-emerald-400 animate-pulse" />
+                    <div className="space-y-2.5 py-1">
+                      <div className="w-10 h-10 rounded-full bg-emerald-950/80 border border-emerald-800/80 flex items-center justify-center mx-auto text-emerald-400">
+                        <FileCheck2 className="w-5 h-5 text-emerald-400 animate-bounce" />
                       </div>
-                      <div className="text-sm font-bold text-zinc-200 max-w-xs truncate mx-auto">
-                        {uploadedFileName}
+                      <div className="space-y-0.5">
+                        <div className="text-sm font-bold text-zinc-100 max-w-xs truncate mx-auto">
+                          {uploadedFileName}
+                        </div>
+                        <div className="text-[11px] text-zinc-400 font-mono flex items-center justify-center gap-2">
+                          <span>{uploadedFileSize}</span>
+                          <span className="w-1 h-1 rounded-full bg-zinc-700" />
+                          <span>{uploadedFileWordCount} words</span>
+                        </div>
                       </div>
-                      <div className="text-xs text-emerald-400 font-medium">
-                        Successfully parsed client-side!
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-400 bg-emerald-950/40 border border-emerald-800/50 rounded-full">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <span>Parsed Client-Side</span>
                       </div>
                     </div>
                   ) : (

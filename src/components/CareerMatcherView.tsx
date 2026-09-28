@@ -22,8 +22,10 @@ import {
   Wand2,
   Globe,
   RotateCcw,
+  Loader2,
 } from 'lucide-react';
 import { CareerMatcherResult, CareerMatcherInput } from '../types/career';
+import { safeFetch } from '../utils/api';
 import { SAMPLE_PROFILES, SampleProfile } from '../data/sampleProfiles';
 
 interface CareerMatcherViewProps {
@@ -125,7 +127,7 @@ export const CareerMatcherView: React.FC<CareerMatcherViewProps> = ({ initialCv 
     setErrorMessage(null);
 
     try {
-      const response = await fetch('/api/career-match', {
+      const response = await safeFetch('/api/career-match', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(input),
@@ -361,6 +363,29 @@ export const CareerMatcherView: React.FC<CareerMatcherViewProps> = ({ initialCv 
             </>
           )}
         </button>
+
+        {isLoading && (
+          <div className="p-5 bg-slate-950/80 border border-slate-800/80 rounded-xl space-y-3 mt-4 text-left">
+            <div className="flex items-center gap-2">
+              <Loader2 className="w-4 h-4 text-white animate-spin shrink-0" />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Target Matcher Progress</span>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-xs text-emerald-400">
+                <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span>Extracting raw system credentials and location tags...</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-indigo-400 animate-pulse">
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-400 shrink-0" />
+                <span>Identifying missing technical keys & generating boolean filters...</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <div className="w-3.5 h-3.5 rounded-full border border-slate-800 shrink-0" />
+                <span>Formatting search URLs for LinkedIn, Indeed and Google Jobs...</span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Results Section */}

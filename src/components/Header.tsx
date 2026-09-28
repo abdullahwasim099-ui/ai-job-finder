@@ -14,6 +14,7 @@ import {
   Radar,
   ChevronDown,
   Menu,
+  Key,
 } from 'lucide-react';
 
 export type ToolType =
@@ -33,6 +34,7 @@ interface HeaderProps {
   historyCount: number;
   onReset: () => void;
   hasResult: boolean;
+  onOpenApiKeyModal: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -42,6 +44,7 @@ export const Header: React.FC<HeaderProps> = ({
   historyCount,
   onReset,
   hasResult,
+  onOpenApiKeyModal,
 }) => {
   const [isToolsMenuOpen, setIsToolsMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -317,6 +320,22 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right Actions Block */}
         <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={onOpenApiKeyModal}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full transition-all relative ${
+              localStorage.getItem('gemini_api_key')
+                ? 'text-emerald-400 border border-emerald-800 bg-emerald-950/20 hover:bg-emerald-950/40'
+                : 'text-zinc-300 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800'
+            }`}
+            title="Configure Custom Gemini API Key"
+          >
+            <Key className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">API Key</span>
+            {localStorage.getItem('gemini_api_key') && (
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            )}
+          </button>
+
           {hasResult && (
             <button
               onClick={onReset}

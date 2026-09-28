@@ -20,8 +20,10 @@ import {
   Briefcase,
   Sliders,
   Send,
+  Loader2,
 } from 'lucide-react';
 import { LiveJobSearchResult, LiveJobSearchInput, LiveJobListing } from '../types/career';
+import { safeFetch } from '../utils/api';
 
 interface LiveJobFinderViewProps {
   initialRole?: string;
@@ -89,7 +91,7 @@ export const LiveJobFinderView: React.FC<LiveJobFinderViewProps> = ({
     setErrorMessage(null);
 
     try {
-      const response = await fetch('/api/live-job-search', {
+      const response = await safeFetch('/api/live-job-search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(input),
@@ -277,6 +279,29 @@ export const LiveJobFinderView: React.FC<LiveJobFinderViewProps> = ({
             </>
           )}
         </button>
+
+        {isLoading && (
+          <div className="p-5 bg-slate-950/80 border border-slate-800/80 rounded-xl space-y-3.5 mt-4">
+            <div className="flex items-center gap-2">
+              <Loader2 className="w-4 h-4 text-white animate-spin shrink-0" />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Grounded Job Search Progress</span>
+            </div>
+            <div className="space-y-2.5 text-left">
+              <div className="flex items-center gap-2.5 text-xs text-emerald-400">
+                <Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
+                <span>Initializing target role and key skills indices...</span>
+              </div>
+              <div className="flex items-center gap-2.5 text-xs text-indigo-400 animate-pulse">
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-400 shrink-0" />
+                <span>Querying live job markets on LinkedIn, Indeed & employer portals using Google Search grounding...</span>
+              </div>
+              <div className="flex items-center gap-2.5 text-xs text-slate-500">
+                <div className="w-3.5 h-3.5 rounded-full border border-slate-800 shrink-0" />
+                <span>Parsing ATS match percentages and creating active listings index...</span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Results Section - Borderless with Hairline Divider */}

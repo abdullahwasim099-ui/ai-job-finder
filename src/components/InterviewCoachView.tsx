@@ -20,6 +20,7 @@ import {
   Wand2,
 } from 'lucide-react';
 import { InterviewQuestionItem, InterviewAnswerFeedback } from '../types/career';
+import { safeFetch } from '../utils/api';
 import { SAMPLE_PROFILES, SampleProfile } from '../data/sampleProfiles';
 import { exportInterviewFeedbackPdf } from '../utils/pdfExport';
 
@@ -106,7 +107,7 @@ export const InterviewCoachView: React.FC<InterviewCoachViewProps> = ({
     setFeedback(null);
 
     try {
-      const response = await fetch('/api/interview/generate-questions', {
+      const response = await safeFetch('/api/interview/generate-questions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ candidateCv, targetRole }),
@@ -145,7 +146,7 @@ export const InterviewCoachView: React.FC<InterviewCoachViewProps> = ({
     setErrorMessage(null);
 
     try {
-      const response = await fetch('/api/interview/evaluate-answer', {
+      const response = await safeFetch('/api/interview/evaluate-answer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

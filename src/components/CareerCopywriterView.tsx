@@ -21,6 +21,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { CopywriterResult, CopywriterInput } from '../types/career';
+import { safeFetch } from '../utils/api';
 import { SAMPLE_PROFILES, SampleProfile } from '../data/sampleProfiles';
 import { jsPDF } from 'jspdf';
 
@@ -131,7 +132,7 @@ export const CareerCopywriterView: React.FC<CareerCopywriterViewProps> = ({ init
     setErrorMessage(null);
 
     try {
-      const response = await fetch('/api/career-copywriter', {
+      const response = await safeFetch('/api/career-copywriter', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(input),

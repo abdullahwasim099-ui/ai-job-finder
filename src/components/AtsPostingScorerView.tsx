@@ -18,6 +18,7 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { AtsPostingScoreResult, AtsPostingScoreInput } from '../types/career';
+import { safeFetch } from '../utils/api';
 
 interface AtsPostingScorerViewProps {
   initialProfileJson?: string;
@@ -140,7 +141,7 @@ export const AtsPostingScorerView: React.FC<AtsPostingScorerViewProps> = ({
     setErrorMessage(null);
 
     try {
-      const response = await fetch('/api/score-posting', {
+      const response = await safeFetch('/api/score-posting', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(input),

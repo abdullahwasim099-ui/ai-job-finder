@@ -34,6 +34,8 @@ import { LiveJobFinderView } from './components/LiveJobFinderView';
 import { EditorialHero } from './components/EditorialHero';
 import { LoadingScreen } from './components/LoadingScreen';
 import { HistoryDrawer } from './components/HistoryDrawer';
+import { ApiKeyModal } from './components/ApiKeyModal';
+import { safeFetch } from './utils/api';
 
 const STORAGE_KEY = 'careerpulse_history';
 
@@ -90,6 +92,7 @@ export default function App() {
   const [viewMode, setViewMode] = useState<'input' | 'results'>('input');
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
+  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState<boolean>(false);
 
   // Load history from localStorage
   useEffect(() => {
@@ -172,7 +175,7 @@ export default function App() {
     const endpoint = mode === 'expert_ats' ? '/api/ats-parse' : '/api/analyze';
 
     try {
-      const response = await fetch(endpoint, {
+      const response = await safeFetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -240,7 +243,7 @@ export default function App() {
     setErrorMessage(null);
 
     try {
-      const response = await fetch('/api/generate-cover-letter', {
+      const response = await safeFetch('/api/generate-cover-letter', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -289,7 +292,7 @@ export default function App() {
         diagnosticAnswers: answers,
       };
 
-      const response = await fetch(endpoint, {
+      const response = await safeFetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -380,6 +383,7 @@ export default function App() {
         historyCount={history.length}
         onReset={handleReset}
         hasResult={hasCurrentResult}
+        onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}
       />
 
       {/* Main Content Area */}
@@ -411,12 +415,22 @@ export default function App() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
             {/* Global Error Banner */}
             {errorMessage && (
-              <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-200 flex items-start gap-3 animate-in fade-in">
-                <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
-                <div className="text-sm flex-1">
-                  <span className="font-semibold">Notice: </span>
-                  {errorMessage}
+              <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-200 flex flex-col sm:flex-row sm:items-center gap-3 animate-in fade-in justify-between">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+                  <div className="text-sm flex-1">
+                    <span className="font-semibold">Notice: </span>
+                    {errorMessage}
+                  </div>
                 </div>
+                {(errorMessage.toLowerCase().includes('gemini_api_key') || errorMessage.toLowerCase().includes('api key') || errorMessage.toLowerCase().includes('apikey')) && (
+                  <button
+                    onClick={() => setIsApiKeyModalOpen(true)}
+                    className="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-rose-500 text-white hover:bg-rose-600 transition-all shrink-0 self-start sm:self-auto"
+                  >
+                    Configure API Key
+                  </button>
+                )}
               </div>
             )}
 
@@ -545,6 +559,12 @@ export default function App() {
         onSelect={handleRestoreHistory}
         onDelete={handleDeleteHistory}
         onClearAll={handleClearAllHistory}
+      />
+
+      {/* API Key Modal */}
+      <ApiKeyModal
+        isOpen={isApiKeyModalOpen}
+        onClose={() => setIsApiKeyModalOpen(false)}
       />
 
       {/* Footer */}
