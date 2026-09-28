@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { AnalysisInput } from '../types/career';
 import { SAMPLE_PROFILES, SampleProfile } from '../data/sampleProfiles';
+import { parseCVFile } from '../utils/fileParser';
 
 interface InputPanelProps {
   input: AnalysisInput;
@@ -51,94 +52,6 @@ const LOCATION_PRESETS = [
   'New York, NY',
   'Berlin, Germany',
 ];
-
-// Helper to dynamically load external scripts from CDN
-const loadScript = (src: string): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    if (document.querySelector(`script[src="${src}"]`)) {
-      resolve();
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = src;
-    script.onload = () => resolve();
-    script.onerror = (err) => reject(err);
-    document.head.appendChild(script);
-  });
-};
-
-// Browser-side document parsing helper functions
-const parsePdfFile = async (arrayBuffer: ArrayBuffer): Promise<string> => {
-  if (!(window as any).pdfjsLib) {
-    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js');
-  }
-
-  const pdfjsLib = (window as any).pdfjsLib;
-  if (!pdfjsLib) {
-    throw new Error('PDF.js library could not be loaded dynamically. Please check your network connection.');
-  }
-
-  // Setup standard worker from CDN
-  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
-
-  try {
-    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-    const pdf = await loadingTask.promise;
-    let fullText = '';
-
-    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-      const page = await pdf.getPage(pageNum);
-      const textContent = await page.getTextContent();
-      const pageText = textContent.items
-        .map((item: any) => item.str)
-        .join(' ');
-      fullText += pageText + '\n';
-    }
-
-    // Fallback if no text extracted (e.g. Scanned PDF or non-standard format)
-    if (!fullText.trim()) {
-      const decoder = new TextDecoder('utf-8');
-      const rawText = decoder.decode(arrayBuffer);
-      const matches = rawText.match(/[\w\s.,;:!?@()\-+*/=]{4,}/g);
-      if (matches && matches.length > 5) {
-        fullText = matches.join(' ');
-      }
-    }
-    return fullText;
-  } catch (err) {
-    console.warn('PDF.js parsing failed, trying text extraction fallback:', err);
-    const decoder = new TextDecoder('utf-8');
-    const rawText = decoder.decode(arrayBuffer);
-    const matches = rawText.match(/[\w\s.,;:!?@()\-+*/=]{4,}/g);
-    if (matches && matches.length > 5) {
-      return matches.join(' ');
-    }
-    throw err;
-  }
-};
-
-const parseDocxFile = async (arrayBuffer: ArrayBuffer): Promise<string> => {
-  if (!(window as any).mammoth) {
-    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js');
-  }
-  const mammoth = (window as any).mammoth;
-  if (!mammoth) {
-    throw new Error('Mammoth.js library could not be loaded dynamically. Please check your network connection.');
-  }
-  const result = await mammoth.extractRawText({ arrayBuffer });
-  return result.value;
-};
-
-const parseTxtFile = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      resolve(e.target?.result as string || '');
-    };
-    reader.onerror = (err) => reject(err);
-    reader.readAsText(file);
-  });
-};
 
 const formatBytes = (bytes: number): string => {
   if (bytes === 0) return '0 Bytes';
@@ -182,20 +95,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
     setUploadedFileSize(formatBytes(file.size));
 
     try {
-      const fileType = file.name.split('.').pop()?.toLowerCase();
-      let extractedText = '';
-
-      if (fileType === 'pdf') {
-        const arrayBuffer = await file.arrayBuffer();
-        extractedText = await parsePdfFile(arrayBuffer);
-      } else if (fileType === 'docx') {
-        const arrayBuffer = await file.arrayBuffer();
-        extractedText = await parseDocxFile(arrayBuffer);
-      } else if (fileType === 'txt' || fileType === 'md' || fileType === 'text') {
-        extractedText = await parseTxtFile(file);
-      } else {
-        throw new Error('Unsupported file format. Please upload PDF, DOCX, or TXT/MD files.');
-      }
+      const extractedText = await parseCVFile(file);
 
       if (!extractedText.trim()) {
         throw new Error('Could not extract any readable text from the document. Please verify it contains text layer.');

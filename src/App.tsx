@@ -446,6 +446,7 @@ export default function App() {
             onSelectListingForScorer={(listing) => {
               setActiveTool('ats_posting_scorer');
             }}
+            onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}
           />
         )}
 

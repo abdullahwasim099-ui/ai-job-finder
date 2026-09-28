@@ -1,7 +1,10 @@
-import tailwindcss from '@tailwindcss/vite';
-import react from '@vitejs/plugin-react';
+import { fileURLToPath } from 'url';
 import path from 'path';
-import {defineConfig} from 'vite';
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 export default defineConfig(() => {
   return {
@@ -10,6 +13,13 @@ export default defineConfig(() => {
       alias: {
         '@': path.resolve(__dirname, '.'),
       },
+    },
+    // Ensure base is relative for fully static single-page application builds without server rewrite dependencies
+    base: './',
+    build: {
+      outDir: 'dist',
+      assetsDir: 'assets',
+      emptyOutDir: true,
     },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
