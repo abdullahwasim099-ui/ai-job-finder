@@ -12,14 +12,15 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    const key = localStorage.getItem('gemini_api_key') || '';
+    const key = localStorage.getItem('user_gemini_api_key') || localStorage.getItem('gemini_api_key') || '';
     setApiKey(key);
   }, [isOpen]);
 
   if (!isOpen) return null;
 
   const handleSave = () => {
-    localStorage.setItem('gemini_api_key', apiKey.trim());
+    localStorage.setItem('user_gemini_api_key', apiKey.trim());
+    localStorage.setItem('gemini_api_key', apiKey.trim()); // Sync both for compatibility
     setSaved(true);
     setTimeout(() => {
       setSaved(false);
@@ -28,6 +29,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
   };
 
   const handleClear = () => {
+    localStorage.removeItem('user_gemini_api_key');
     localStorage.removeItem('gemini_api_key');
     setApiKey('');
     setSaved(true);

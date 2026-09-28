@@ -94,6 +94,15 @@ export default function App() {
   const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState<boolean>(false);
 
+  // Auto-open API key configuration modal if no key is present in environment or local storage
+  useEffect(() => {
+    const customKey = localStorage.getItem('user_gemini_api_key') || localStorage.getItem('gemini_api_key');
+    const envKey = (import.meta.env as any).VITE_GEMINI_API_KEY;
+    if (!customKey && !envKey) {
+      setIsApiKeyModalOpen(true);
+    }
+  }, []);
+
   // Load history from localStorage
   useEffect(() => {
     try {

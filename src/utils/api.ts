@@ -1,5 +1,5 @@
 export const safeFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-  const customKey = localStorage.getItem('gemini_api_key') || (import.meta.env as any).VITE_GEMINI_API_KEY || '';
+  const customKey = localStorage.getItem('user_gemini_api_key') || localStorage.getItem('gemini_api_key') || (import.meta.env as any).VITE_GEMINI_API_KEY || '';
   
   const safeInit: RequestInit = init ? { ...init } : {};
   const headersObj: Record<string, string> = {};
@@ -44,6 +44,17 @@ export function safeParseJSON(rawText: string): any {
   }
 }
 
+export function extractAndParseJSON(rawResponse: string): any {
+  try {
+    const cleaned = rawResponse.replace(/```json/gi, '').replace(/```/g, '').trim();
+    const jsonMatch = rawResponse.match(/(\[[\s\S]*\]|\{[\s\S]*\})/);
+    return JSON.parse(jsonMatch ? jsonMatch[0] : cleaned);
+  } catch (err) {
+    console.error("Failed to parse JSON, falling back to raw output", err);
+    return null;
+  }
+}
+
 export interface DirectGeminiResponse {
   text: string;
   groundingMetadata?: {
@@ -60,7 +71,7 @@ export interface DirectGeminiResponse {
 }
 
 export async function callGeminiDirect(prompt: string, useSearchGrounding = false): Promise<DirectGeminiResponse> {
-  const apiKey = localStorage.getItem('gemini_api_key') || (import.meta.env as any).VITE_GEMINI_API_KEY || '';
+  const apiKey = localStorage.getItem('user_gemini_api_key') || localStorage.getItem('gemini_api_key') || (import.meta.env as any).VITE_GEMINI_API_KEY || '';
   if (!apiKey) {
     throw new Error('GEMINI_API_KEY_UNDEFINED');
   }

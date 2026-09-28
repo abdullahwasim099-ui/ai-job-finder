@@ -23,7 +23,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { LiveJobSearchResult, LiveJobSearchInput, LiveJobListing } from '../types/career';
-import { safeFetch, callGeminiDirect, safeParseJSON } from '../utils/api';
+import { safeFetch, callGeminiDirect, safeParseJSON, extractAndParseJSON } from '../utils/api';
 
 interface LiveJobFinderViewProps {
   initialRole?: string;
@@ -92,13 +92,12 @@ export const LiveJobFinderView: React.FC<LiveJobFinderViewProps> = ({
     setIsLoading(true);
     setErrorMessage(null);
 
-    const promptText = `Search for active jobs matching the criteria. Target role: ${input.targetRole}. Location preference: ${input.location || 'Remote'}. Key technical skills/keywords: ${input.skills || 'Any'}.
-Output ONLY a raw JSON array of objects with keys: jobTitle, company, location, description, url, matchPercentage. Do NOT wrap the JSON in markdown explanations or conversational intro text.`;
+    const promptText = `Search for active job listings matching ${input.targetRole} in ${input.location || 'Remote'}. Return ONLY a valid JSON array of objects with keys: jobTitle, company, location, description, url, matchPercentage. Do NOT include markdown code blocks or conversational intro text. Technical skills constraint reference: ${input.skills || 'Any'}`;
 
     try {
       const geminiRes = await callGeminiDirect(promptText, true);
       const rawText = geminiRes.text;
-      let parsed = safeParseJSON(rawText);
+      let parsed = extractAndParseJSON(rawText);
 
       if (!Array.isArray(parsed) || parsed.length === 0) {
         console.warn("No valid JSON array parsed or received, converting grounding chunks to search cards...");
@@ -216,8 +215,17 @@ Output ONLY a raw JSON array of objects with keys: jobTitle, company, location, 
   return (
     <div className="space-y-6">
       {errorMessage && (
-        <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-200 text-xs sm:text-sm">
-          {errorMessage}
+        <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-200 text-xs sm:text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <span>{errorMessage}</span>
+          {errorMessage.includes('API Key') && onOpenApiKeyModal && (
+            <button
+              type="button"
+              onClick={onOpenApiKeyModal}
+              className="px-3 py-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 font-bold rounded-lg border border-rose-500/30 text-xs transition-colors self-start sm:self-auto"
+            >
+              Configure API Key
+            </button>
+          )}
         </div>
       )}
 
