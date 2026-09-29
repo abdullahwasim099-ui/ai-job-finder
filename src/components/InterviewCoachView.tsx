@@ -183,7 +183,7 @@ export const InterviewCoachView: React.FC<InterviewCoachViewProps> = ({
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      alert('Speech Recognition is not supported by your browser. Please type your answer.');
+      setErrorMessage('Speech Recognition is not supported by your browser. Please type your answer.');
       return;
     }
 

@@ -22,6 +22,9 @@ import { safeFetch } from '../utils/api';
 
 interface AtsPostingScorerViewProps {
   initialProfileJson?: string;
+  initialJobTitle?: string;
+  initialCompany?: string;
+  initialJobDescription?: string;
 }
 
 const SAMPLE_PROFILE_JSON = JSON.stringify(
@@ -77,12 +80,15 @@ Requirements:
 
 export const AtsPostingScorerView: React.FC<AtsPostingScorerViewProps> = ({
   initialProfileJson = '',
+  initialJobTitle,
+  initialCompany,
+  initialJobDescription,
 }) => {
   const [input, setInput] = useState<AtsPostingScoreInput>({
     parsedCvProfile: initialProfileJson || SAMPLE_PROFILE_JSON,
-    jobTitle: SAMPLE_JOB_POSTING.title,
-    company: SAMPLE_JOB_POSTING.company,
-    jobDescription: SAMPLE_JOB_POSTING.description,
+    jobTitle: initialJobTitle || SAMPLE_JOB_POSTING.title,
+    company: initialCompany || SAMPLE_JOB_POSTING.company,
+    jobDescription: initialJobDescription || SAMPLE_JOB_POSTING.description,
   });
 
   const [inputMode, setInputMode] = useState<'form' | 'raw'>('form');

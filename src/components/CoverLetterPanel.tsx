@@ -11,6 +11,7 @@ import {
   Wand2,
 } from 'lucide-react';
 import { CoverLetterInput } from '../types/career';
+import { parseCVFile } from '../utils/fileParser';
 
 interface CoverLetterPanelProps {
   input: CoverLetterInput;
@@ -61,18 +62,27 @@ export const CoverLetterPanel: React.FC<CoverLetterPanelProps> = ({
     ? input.candidateCv.trim().split(/\s+/).filter(Boolean).length
     : 0;
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const content = event.target?.result;
-      if (typeof content === 'string') {
-        onChange({ candidateCv: content });
+    try {
+      const extractedText = await parseCVFile(file);
+      if (extractedText && extractedText.trim()) {
+        onChange({ candidateCv: extractedText.trim() });
       }
-    };
-    reader.readAsText(file);
+    } catch (err) {
+      console.error('Failed to parse file:', err);
+      // Fallback
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const content = event.target?.result;
+        if (typeof content === 'string') {
+          onChange({ candidateCv: content });
+        }
+      };
+      reader.readAsText(file);
+    }
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }

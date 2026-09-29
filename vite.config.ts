@@ -16,6 +16,9 @@ export default defineConfig(() => {
     },
     // Ensure base is relative for fully static single-page application builds without server rewrite dependencies
     base: './',
+    define: {
+      'import.meta.env.VITE_GEMINI_API_KEY': JSON.stringify(process.env.GEMINI_API_KEY || ''),
+    },
     build: {
       outDir: 'dist',
       assetsDir: 'assets',

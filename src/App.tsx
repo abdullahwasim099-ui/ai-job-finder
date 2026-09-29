@@ -18,6 +18,7 @@ import {
   CoverLetterInput,
   CoverLetterResult,
   HistoryItem,
+  LiveJobListing,
 } from './types/career';
 import { SAMPLE_PROFILES, SampleProfile } from './data/sampleProfiles';
 import { Header, ToolType } from './components/Header';
@@ -93,6 +94,7 @@ export default function App() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState<boolean>(false);
+  const [selectedJobListingForScoring, setSelectedJobListingForScoring] = useState<LiveJobListing | null>(null);
 
   // Auto-open API key configuration modal if no key is present in environment or local storage
   useEffect(() => {
@@ -453,7 +455,9 @@ export default function App() {
             initialLocation={input.locationPreference || 'Remote'}
             initialSkills={input.userPreferences?.keyHardSkills || 'Distributed Systems, Microservices, Node.js, AWS, Kubernetes, Kafka'}
             onSelectListingForScorer={(listing) => {
+              setSelectedJobListingForScoring(listing);
               setActiveTool('ats_posting_scorer');
+              window.scrollTo({ top: 350, behavior: 'smooth' });
             }}
             onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}
           />
@@ -466,7 +470,11 @@ export default function App() {
 
         {/* ================= Tool 6: ATS Scoring Engine for Job Postings (Turn 6) ================= */}
         {activeTool === 'ats_posting_scorer' && (
-          <AtsPostingScorerView />
+          <AtsPostingScorerView
+            initialJobTitle={selectedJobListingForScoring?.jobTitle}
+            initialCompany={selectedJobListingForScoring?.company}
+            initialJobDescription={selectedJobListingForScoring?.snippet || selectedJobListingForScoring?.description}
+          />
         )}
 
         {/* ================= Tool 5: AI Career Matcher & Job Search (Turn 5) ================= */}

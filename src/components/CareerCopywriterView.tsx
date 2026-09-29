@@ -24,6 +24,7 @@ import { CopywriterResult, CopywriterInput } from '../types/career';
 import { safeFetch } from '../utils/api';
 import { SAMPLE_PROFILES, SampleProfile } from '../data/sampleProfiles';
 import { jsPDF } from 'jspdf';
+import { parseCVFile } from '../utils/fileParser';
 
 interface CareerCopywriterViewProps {
   initialCv?: string;
@@ -67,18 +68,26 @@ export const CareerCopywriterView: React.FC<CareerCopywriterViewProps> = ({ init
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const content = event.target?.result;
-      if (typeof content === 'string') {
-        setInput((prev) => ({ ...prev, candidateCv: content }));
+    try {
+      const extractedText = await parseCVFile(file);
+      if (extractedText && extractedText.trim()) {
+        setInput((prev) => ({ ...prev, candidateCv: extractedText.trim() }));
       }
-    };
-    reader.readAsText(file);
+    } catch (err) {
+      console.error('File parsing error:', err);
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const content = event.target?.result;
+        if (typeof content === 'string') {
+          setInput((prev) => ({ ...prev, candidateCv: content }));
+        }
+      };
+      reader.readAsText(file);
+    }
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 

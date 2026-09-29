@@ -245,6 +245,7 @@ export interface LiveJobListing {
   topRequiredSkills: string[];
   postingUrl: string;
   snippet?: string;
+  description?: string;
 }
 
 export interface GroundingSource {

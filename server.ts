@@ -572,7 +572,7 @@ app.post('/api/interview/generate-questions', async (req, res) => {
 
     const ai = getGeminiClient(req);
     if (!ai) {
-      return res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server.' });
+      return res.json(fallbackInterviewQuestions(candidateCv));
     }
 
     const prompt = `You are an AI Interview Coach preparing a candidate for a specific job role.
@@ -602,7 +602,7 @@ ${targetRole}
     return res.json(parsed);
   } catch (err: any) {
     console.error('Error generating interview questions:', err);
-    return res.status(500).json({ error: err.message || 'Failed to generate interview questions.' });
+    return res.json(fallbackInterviewQuestions(req.body?.candidateCv || ''));
   }
 });
 
@@ -619,7 +619,7 @@ app.post('/api/interview/evaluate-answer', async (req, res) => {
 
     const ai = getGeminiClient(req);
     if (!ai) {
-      return res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server.' });
+      return res.json(fallbackInterviewFeedback(userAnswer));
     }
 
     let prompt = `You are an AI Interview Coach preparing a candidate for a specific job role. You evaluate candidate responses, point out weak areas, and suggest improved answers.
@@ -665,7 +665,7 @@ ${userAnswer}
     return res.json(parsed);
   } catch (err: any) {
     console.error('Error evaluating interview answer:', err);
-    return res.status(500).json({ error: err.message || 'Failed to evaluate interview answer.' });
+    return res.json(fallbackInterviewFeedback(req.body?.userAnswer || ''));
   }
 });
 
@@ -755,7 +755,7 @@ app.post('/api/career-match', async (req, res) => {
 
     const ai = getGeminiClient(req);
     if (!ai) {
-      return res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server.' });
+      return res.json(fallbackCareerMatcher(candidateCv));
     }
 
     const systemPrompt = `You are an advanced AI Career Matcher and Resume Parser. Your job is to analyze candidate CV text, evaluate their skills, and build targeted job search parameters for platforms like LinkedIn, Indeed, and Google Jobs.
@@ -812,7 +812,7 @@ ${workType}
     return res.json(parsedData);
   } catch (err: any) {
     console.error('Error in /api/career-match:', err);
-    return res.status(500).json({ error: err.message || 'Failed to match career parameters.' });
+    return res.json(fallbackCareerMatcher(req.body?.candidateCv || ''));
   }
 });
 
@@ -903,7 +903,7 @@ app.post('/api/score-posting', async (req, res) => {
 
     const ai = getGeminiClient(req);
     if (!ai) {
-      return res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server.' });
+      return res.json(fallbackAtsPostingScore(parsedCvProfile));
     }
 
     const systemPrompt = `You are an ATS Scoring Engine. Your task is to compare a parsed candidate profile against a target job posting from LinkedIn or Indeed, calculate a compatibility score, and explain missing keywords.
@@ -940,7 +940,7 @@ ${parsedCvProfile}
     return res.json(parsed);
   } catch (err: any) {
     console.error('Error in /api/score-posting:', err);
-    return res.status(500).json({ error: err.message || 'Failed to calculate ATS posting score.' });
+    return res.json(fallbackAtsPostingScore(req.body?.parsedCvProfile || ''));
   }
 });
 
@@ -1021,7 +1021,7 @@ app.post('/api/career-copywriter', async (req, res) => {
 
     const ai = getGeminiClient(req);
     if (!ai) {
-      return res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server.' });
+      return res.json(fallbackCareerCopywriter(candidateCv));
     }
 
     const systemPrompt = `You are a Professional Career Copywriter. Your task is to write a highly tailored, concise cover letter and candidate response using details from the Candidate CV and the target LinkedIn/Indeed job posting.
@@ -1061,7 +1061,7 @@ ${jobDescription}
     return res.json(parsed);
   } catch (err: any) {
     console.error('Error in /api/career-copywriter:', err);
-    return res.status(500).json({ error: err.message || 'Failed to generate tailored copy.' });
+    return res.json(fallbackCareerCopywriter(req.body?.candidateCv || ''));
   }
 });
 
@@ -1102,7 +1102,7 @@ app.post('/api/live-job-search', async (req, res) => {
 
     const ai = getGeminiClient(req);
     if (!ai) {
-      return res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server.' });
+      return res.json(fallbackLiveJobSearch('', targetRole));
     }
 
     const prompt = `You are an executive job finder and career strategist.
@@ -1193,7 +1193,7 @@ Respond with ONLY a valid raw JSON object matching this schema (no markdown, no 
     return res.json(parsedData);
   } catch (err: any) {
     console.error('Error in /api/live-job-search:', err);
-    return res.status(500).json({ error: err.message || 'Failed to search live jobs.' });
+    return res.json(fallbackLiveJobSearch('', req.body?.targetRole || 'Software Engineer'));
   }
 });
 
@@ -1221,9 +1221,7 @@ app.post('/api/generate-cover-letter', async (req, res) => {
 
     const ai = getGeminiClient(req);
     if (!ai) {
-      return res.status(500).json({
-        error: 'GEMINI_API_KEY is not configured on the server. Please check the Secrets panel.',
-      });
+      return res.json(fallbackCoverLetter(candidateCv));
     }
 
     const contents = `[CANDIDATE CV]:
@@ -1256,9 +1254,7 @@ ${compName}
     return res.json(parsedData);
   } catch (err: any) {
     console.error('Error in /api/generate-cover-letter:', err);
-    return res.status(500).json({
-      error: err.message || 'An error occurred while generating the cover letter.',
-    });
+    return res.json(fallbackCoverLetter(req.body?.candidateCv || ''));
   }
 });
 
@@ -1301,9 +1297,7 @@ app.post('/api/ats-parse', async (req, res) => {
 
     const ai = getGeminiClient(req);
     if (!ai) {
-      return res.status(500).json({
-        error: 'GEMINI_API_KEY is not configured on the server. Please check the Secrets panel.',
-      });
+      return res.json(fallbackExpertAts(candidateCv, targetRole));
     }
 
     let contents = `[CANDIDATE CV]:
@@ -1344,9 +1338,7 @@ ${locationPreference || 'Remote / Flexible'}
     return res.json(parsedData);
   } catch (err: any) {
     console.error('Error in /api/ats-parse:', err);
-    return res.status(500).json({
-      error: err.message || 'An error occurred during ATS parsing.',
-    });
+    return res.json(fallbackExpertAts(req.body?.candidateCv || '', req.body?.targetRole || 'Target Role'));
   }
 });
 
@@ -1384,9 +1376,7 @@ app.post('/api/analyze', async (req, res) => {
 
     const ai = getGeminiClient(req);
     if (!ai) {
-      return res.status(500).json({
-        error: 'GEMINI_API_KEY is not configured on the server. Please check the Secrets panel.',
-      });
+      return res.json(fallbackComprehensive(candidateCv, targetRole));
     }
 
     let prompt = `Analyze this candidate CV against the target role and preferences:
@@ -1440,9 +1430,7 @@ ${targetSalaryOrSeniority || 'Not specified'}
     return res.json(parsedData);
   } catch (err: any) {
     console.error('Error in /api/analyze:', err);
-    return res.status(500).json({
-      error: err.message || 'An unexpected error occurred during resume analysis.',
-    });
+    return res.json(fallbackComprehensive(req.body?.candidateCv || '', req.body?.targetRole || 'Target Role'));
   }
 });
 
